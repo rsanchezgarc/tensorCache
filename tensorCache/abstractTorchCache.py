@@ -1,5 +1,3 @@
-# Here is the full code for the AbstractTorchCache class
-
 from abc import ABC, abstractmethod
 import torch
 

@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
-from tensorCache.tensorCache import TensorCache
+from tensorCache.tensorSingleCache import TensorCache
 
 class TestTensorCache(TensorCache):
     def compute_idxs(self, idxs):

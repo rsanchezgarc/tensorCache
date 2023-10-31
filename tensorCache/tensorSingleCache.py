@@ -1,4 +1,3 @@
-# Code for TensorCache inheriting from AbstractTorchCache
 from abc import abstractmethod
 
 import torch
