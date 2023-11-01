@@ -6,11 +6,11 @@ from tensorCache.abstractTorchCache import AbstractTorchCache
 
 
 class TensorCache(AbstractTorchCache):
-    def __init__(self, cache_size, tensor_shape, max_index, dtype, device):
-        super().__init__(cache_size, max_index, device)
+    def __init__(self, cache_size, tensor_shape, max_index, dtype, data_device, logic_device="cpu"):
+        super().__init__(cache_size, max_index, data_device, logic_device)
         self.tensor_shape = tensor_shape
         self.dtype = dtype
-        self.cache = torch.zeros((self.cache_size, *self.tensor_shape), dtype=dtype, device=device)
+        self.cache = torch.zeros((self.cache_size, *self.tensor_shape), dtype=dtype, device=self.data_device)
 
     @abstractmethod
     def compute_idxs(self, idxs):
@@ -20,7 +20,7 @@ class TensorCache(AbstractTorchCache):
         self.cache[lru_slots] = tensor_data
 
     def _get_empty_output(self, n):
-        return torch.empty((n,)+self.tensor_shape, dtype=self.dtype, device=self.device)
+        return torch.empty((n,) + self.tensor_shape, dtype=self.dtype, device=self.data_device)
 
     def _set_output_values(self, output_tensor, output_idxs, cache_idxs):
         if len(cache_idxs) > 0:

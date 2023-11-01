@@ -7,12 +7,12 @@ from tensorCache.abstractTorchCache import AbstractTorchCache
 
 class TensorListCache(AbstractTorchCache):
 
-    def __init__(self, cache_size, max_index, tensor_shapes, dtypes, device):
-        super().__init__(cache_size, max_index, device)
+    def __init__(self, cache_size, max_index, tensor_shapes, dtypes, data_device, logic_device="cpu"):
+        super().__init__(cache_size, max_index, data_device, logic_device)
         self.tensor_shapes = tensor_shapes
         self.dtypes = dtypes
         # Initialize multiple caches
-        self.caches = [torch.empty((self.cache_size, *shape), dtype=dtype, device=device)
+        self.caches = [torch.empty((self.cache_size, *shape), dtype=dtype, device=self.data_device)
                        for shape, dtype in zip(self.tensor_shapes, self.dtypes)]
 
     @abstractmethod
@@ -26,7 +26,7 @@ class TensorListCache(AbstractTorchCache):
 
 
     def _get_empty_output(self, n):
-        return [torch.empty((n,) + shape, dtype=dtype, device=self.device)
+        return [torch.empty((n,) + shape, dtype=dtype, device=self.data_device)
                 for shape, dtype in zip(self.tensor_shapes, self.dtypes)]
 
 

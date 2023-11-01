@@ -2,14 +2,15 @@ from abc import ABC, abstractmethod
 import torch
 
 class AbstractTorchCache(ABC):
-    def __init__(self, cache_size, max_index, device):
+    def __init__(self, cache_size, max_index, data_device, logic_device="cpu"):
         self.cache_size = cache_size
         self.max_index = max_index
-        self.device = device
+        self.logic_device = logic_device
+        self.data_device = data_device
 
-        self.index_tracker = torch.full((self.max_index,), -1, dtype=torch.long, device=device)
-        self.reverse_index_tracker = torch.full((self.cache_size,), -1, dtype=torch.long, device=device)
-        self.lru_tracker = torch.zeros(self.cache_size, dtype=torch.long, device=device)
+        self.index_tracker = torch.full((self.max_index,), -1, dtype=torch.long, device=logic_device)
+        self.reverse_index_tracker = torch.full((self.cache_size,), -1, dtype=torch.long, device=logic_device)
+        self.lru_tracker = torch.zeros(self.cache_size, dtype=torch.long, device=logic_device)
         self.current_lru = 0
 
     @abstractmethod
@@ -23,7 +24,7 @@ class AbstractTorchCache(ABC):
 
     @abstractmethod
     def _get_empty_output(self, n):
-        # return torch.empty(n, dtype=self.dtype, device=self.device)
+        # return torch.empty(n, dtype=self.dtype, data_device=self.data_device)
         raise NotImplementedError()
 
     @abstractmethod

@@ -13,7 +13,7 @@ class TestTensorCache(TensorCache):
 
 class TestSingleTensorPyTorchCache1(unittest.TestCase):
     def setUp(self):
-        self.cache = TestTensorCache(3, (2, 2), 10, dtype=torch.float32, device="cpu")
+        self.cache = TestTensorCache(3, (2, 2), 10, dtype=torch.float32, data_device="cpu")
 
     def test_insert_and_retrieve(self):
         expected_data = self.cache.compute_idxs(torch.tensor([1, 2]))
@@ -104,7 +104,7 @@ class TestSingleTensorPyTorchCache2(unittest.TestCase):
         self.cache_size = 5
         self.max_index = 20
         self.cache = TestTensorCache(self.cache_size, (2, 2),
-                                     self.max_index, dtype=torch.float32, device="cpu")
+                                     self.max_index, dtype=torch.float32, data_device="cpu")
 
 
     def test_insert_and_retrieve_large(self):
