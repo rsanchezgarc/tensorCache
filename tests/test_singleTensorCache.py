@@ -4,19 +4,21 @@ import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
-from tensorCache.tensorSingleCache import TensorCache
+from tensorCache.tensorSingleLRUCache import TensorLRUCache
 
-class TestTensorCache(TensorCache):
+
+DATA_DEVICE="cuda:0"
+class TestTensorCache(TensorLRUCache):
     def compute_idxs(self, idxs):
         values = torch.ones(len(idxs)) * torch.as_tensor(idxs)
         return torch.ones((len(idxs),) + self.tensor_shape) * values.unsqueeze(-1).unsqueeze(-1)
 
 class TestSingleTensorPyTorchCache1(unittest.TestCase):
     def setUp(self):
-        self.cache = TestTensorCache(3, (2, 2), 10, dtype=torch.float32, data_device="cpu")
+        self.cache = TestTensorCache(3, (2, 2), 10, dtype=torch.float32, data_device=DATA_DEVICE)
 
     def test_insert_and_retrieve(self):
-        expected_data = self.cache.compute_idxs(torch.tensor([1, 2]))
+        expected_data = self.cache.compute_idxs(torch.tensor([1, 2])).to(DATA_DEVICE)
 
         self.cache.insert(torch.tensor([1, 2]), expected_data)
 
@@ -31,31 +33,31 @@ class TestSingleTensorPyTorchCache1(unittest.TestCase):
         self.cache.retrieve(torch.tensor([4, 5, 6]))
 
         retrieved_data = self.cache.retrieve(torch.tensor([1, 2, 3, 4, 5, 6]))
-        expected_data = self.cache.compute_idxs(torch.tensor([1, 2, 3, 4, 5, 6]))
+        expected_data = self.cache.compute_idxs(torch.tensor([1, 2, 3, 4, 5, 6])).to(DATA_DEVICE)
         self.assertTrue(torch.equal(retrieved_data, expected_data))
 
     def test_compute_idx(self):
         retrieved_data = self.cache.retrieve(torch.tensor([7]))
-        expected_data = self.cache.compute_idxs(torch.tensor([7]))
+        expected_data = self.cache.compute_idxs(torch.tensor([7])).to(DATA_DEVICE)
         self.assertTrue(torch.equal(retrieved_data, expected_data))
 
     def test_mixed_retrieve(self):
         self.cache.insert(torch.tensor([1, 2]), self.cache.compute_idxs(torch.tensor([1, 2])))
 
         retrieved_data = self.cache.retrieve(torch.tensor([1, 8, 2, 9]))
-        expected_data = self.cache.compute_idxs(torch.tensor([1, 8, 2, 9]))
+        expected_data = self.cache.compute_idxs(torch.tensor([1, 8, 2, 9])).to(DATA_DEVICE)
         self.assertTrue(torch.equal(retrieved_data, expected_data))
 
     def test_empty_retrieve(self):
         retrieved_data = self.cache.retrieve(torch.tensor([1, 2]))
-        expected_data = self.cache.compute_idxs(torch.tensor([1, 2]))
+        expected_data = self.cache.compute_idxs(torch.tensor([1, 2])).to(DATA_DEVICE)
         self.assertTrue(torch.equal(retrieved_data, expected_data))
 
     def test_duplicate_indices(self):
         self.cache.insert(torch.tensor([1, 1, 2]), self.cache.compute_idxs(torch.tensor([1, 1, 2])))
 
         retrieved_data = self.cache.retrieve(torch.tensor([1, 2]))
-        expected_data =  self.cache.compute_idxs(torch.tensor([1, 2]))
+        expected_data =  self.cache.compute_idxs(torch.tensor([1, 2])).to(DATA_DEVICE)
         self.assertTrue(torch.equal(retrieved_data, expected_data))
     def test_sequential_traversal(self):
 
@@ -104,11 +106,11 @@ class TestSingleTensorPyTorchCache2(unittest.TestCase):
         self.cache_size = 5
         self.max_index = 20
         self.cache = TestTensorCache(self.cache_size, (2, 2),
-                                     self.max_index, dtype=torch.float32, data_device="cpu")
+                                     self.max_index, dtype=torch.float32, data_device=DATA_DEVICE)
 
 
     def test_insert_and_retrieve_large(self):
-        expected_data = self.cache.compute_idxs(torch.tensor([1, 2, 3]))
+        expected_data = self.cache.compute_idxs(torch.tensor([1, 2, 3])).to(DATA_DEVICE)
         self.cache.insert(torch.tensor([1, 2, 3]), expected_data)
         retrieved_data = self.cache.retrieve(torch.tensor([1, 2, 3]))
         self.assertTrue(torch.equal(retrieved_data, expected_data))
@@ -122,7 +124,7 @@ class TestSingleTensorPyTorchCache2(unittest.TestCase):
         self.cache.retrieve(torch.tensor([6, 7, 8]))
 
         retrieved_data = self.cache.retrieve(torch.tensor([1, 2, 3, 4, 5, 6, 7, 8]))
-        expected_data = self.cache.compute_idxs(torch.tensor([1, 2, 3, 4, 5, 6, 7, 8]))
+        expected_data = self.cache.compute_idxs(torch.tensor([1, 2, 3, 4, 5, 6, 7, 8])).to(DATA_DEVICE)
         self.assertTrue(torch.equal(retrieved_data, expected_data))
 
 

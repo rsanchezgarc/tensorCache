@@ -1,12 +1,12 @@
 # Torch cache
 This implements an LRU cache for tensors.
-You just need to define a child class inheriting from `TensorCache` and implement the
+You just need to define a child class inheriting from `TensorLRUCache` and implement the
 compute_idxs method, a method that compute the values of the cache for the given indices
 ```
 
-from tensorCache.tensorCache import TensorCache
+from tensorCache.tensorCache import TensorLRUCache
 
-class TestTensorCache(TensorCache):
+class TestTensorCache(TensorLRUCache):
     def compute_idxs(self, idxs):
         values = torch.ones(len(idxs)) * torch.as_tensor(idxs)
         return torch.ones((len(idxs),) + self.tensor_shape) * values.unsqueeze(-1).unsqueeze(-1)

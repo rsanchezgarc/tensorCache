@@ -3,26 +3,26 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 
-from tensorCache.tensorListCache import TensorListCache
+from tensorCache.tensorListLRUCache import TensorListLRUCache
 
 
 DTYPES = [torch.float32, torch.float64]
 SHAPES = [(2, 2), (3, 3)]
-class TensorListCacheForTest(TensorListCache):
+class TensorListCacheForTest(TensorListLRUCache):
     def compute_idxs(self, idxs):
         # Assume a simple computation for mock
         return [torch.ones((len(idxs),) + self.caches[i].shape[1:], dtype=DTYPES[i]) * i
                 for i in range(len(self.caches))]
 
 
-# Test class for TensorListCache
+# Test class for TensorListLRUCache
 class TestTensorListCache(unittest.TestCase):
     def setUp(self):
         self.cache_size = 5
         self.max_index = 20
         self.tensor_shapes = [(2, 2), (3, 3)]
         self.dtypes = DTYPES
-        self.device = "cpu"
+        self.device = "cuda" #"cpu"
         self.cache = TensorListCacheForTest(self.cache_size, self.max_index, self.tensor_shapes, self.dtypes, self.device)
 
     def test_arbitrary_indexing(self):
@@ -48,7 +48,7 @@ class TestTensorListCache(unittest.TestCase):
     def test_single_insert_and_retrieve(self):
 
         idx = torch.tensor([1])
-        expected_data = self.cache.compute_idxs(idx)
+        expected_data = self.cache._compute_idxs(idx)
         self.cache.insert(idx, expected_data)
 
         retrieved_data = self.cache.retrieve(idx)
@@ -58,7 +58,7 @@ class TestTensorListCache(unittest.TestCase):
     def test_multiple_insert_and_retrieve(self):
 
         idx = torch.tensor([1, 2, 3])
-        expected_data = self.cache.compute_idxs(idx)
+        expected_data = self.cache._compute_idxs(idx)
         self.cache.insert(idx, expected_data)
         retrieved_data = self.cache.retrieve(idx)
         for i in range(len(self.tensor_shapes)):
@@ -69,7 +69,7 @@ class TestTensorListCache(unittest.TestCase):
     def test_lru_eviction_single(self):
 
         idx = torch.tensor([1, 2, 3, 4, 5])
-        expected_data = self.cache.compute_idxs(idx)
+        expected_data = self.cache._compute_idxs(idx)
         self.cache.insert(idx, expected_data)
 
         new_idx = torch.tensor([6])
@@ -80,7 +80,7 @@ class TestTensorListCache(unittest.TestCase):
         final_retrieval_idx = torch.tensor([1, 6])
         final_retrieval_data = self.cache.retrieve(final_retrieval_idx)
 
-        final_expected_data = self.cache.compute_idxs(final_retrieval_idx)
+        final_expected_data = self.cache._compute_idxs(final_retrieval_idx)
         for i in range(len(self.tensor_shapes)):
             self.assertTrue(torch.equal(final_retrieval_data[i], final_expected_data[i]))
 
@@ -88,7 +88,7 @@ class TestTensorListCache(unittest.TestCase):
     def test_lru_eviction_multiple(self):
 
         idx = torch.tensor([1, 2, 3, 4, 5])
-        expected_data = self.cache.compute_idxs(idx)
+        expected_data = self.cache._compute_idxs(idx)
         self.cache.insert(idx, expected_data)
 
         new_idx = torch.tensor([6, 7])
@@ -99,7 +99,7 @@ class TestTensorListCache(unittest.TestCase):
         final_retrieval_idx = torch.tensor([1, 2, 6, 7])
         final_retrieval_data = self.cache.retrieve(final_retrieval_idx)
 
-        final_expected_data = self.cache.compute_idxs(final_retrieval_idx)
+        final_expected_data = self.cache._compute_idxs(final_retrieval_idx)
         for i in range(len(self.tensor_shapes)):
             self.assertTrue(torch.equal(final_retrieval_data[i], final_expected_data[i]))
 
